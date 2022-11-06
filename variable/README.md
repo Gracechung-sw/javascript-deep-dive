@@ -1,33 +1,5 @@
-# Variable
 
-## Memory
 
-하드 디스크
-연산 CPU
-메모리
-
-메모리상에 데이터를 읽고 쓰고
-메모리 cell = 1 byte(8 bit) size
-의 모음.
-applicatio이 memory상에 올라왔을 때,
-
-- Code
-- Data
-- Stack
-- Heap
-  의 메모리 구조를 가진다.
-
-## Variable
-
-Application이 실행되면
-
-- 입력(input) -> 처리(process) -> 출력(output)/저장(storage) 큰 3가지 줄기를 가진다.
-- 이 중 처리(process)에서 처리 과정 중의 데이터(ex. 사용자에게 입력받은 데이터라던지..)를 잠시 저정해 두는 것이 필요.
-
-변수(Variable)은
-
-- 값을 저장하는 공간
-- 자료를 저장할 수 있는 **이름이 주어진** 기억장소
 
 JS에서 변수 사용
 
@@ -41,33 +13,7 @@ let b = 0; // b 변수를 선언하면서 값을 할당.
 b = 1; // 값의 재할당.
 ```
 
-## Naming
 
-```Javascript
-let 0x00006 = 1;
-```
-
-이렇게 메모리 주소를 직접 사용하면 가독성이 매우 떨어지고, 어려운 점이 많다.
-해당 변수의 역할을 명확하게 드러내는 의미있는 변수명을 짓는 것이 중요하다.
-
-- 변수 MDN 문서: developer.mozilla.org/ko/docs/Learn/JavaScript/First_steps/Variables
-- 예약어 종류: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#keywords
-
-naming에 대한 꿀팁
-
-```Javascript
-let backAudio;
-let windAudio;
-```
-
-이렇게 Audio인데 어떤 autio에 대한 변수가 여러개일 때 공통적인 것을 이렇게 뒤에적기보다
-
-```Javascript
-let audioBack; // audio인데, 어떤 audio냐면 Back
-let audioWind; // audio인데, 어떤 audio냐면 Wind
-```
-
-이렇게 앞에 적어두면 나중에 audio까지만 쳐도 관련된 것들의 hint를 editor를 통해 볼 수 있음.
 
 ## Data Type
 
