@@ -1,12 +1,15 @@
 # This
 
+## This란
+this는 자신이 속한 객체 또는 자신이 생성할 인스턴스를 가리키는 자기 참조 변수(self-referencing variable)이다. this를 통해 자신이 속한 객체 또는 자신이 생성할 인스턴스의 프로퍼티나 메서드를 참조할 수 있다.   
+
 ## This 바인딩
 
 - Java, C#, C++ 등 대부분의 객체지향 프로그래밍 언어에서의 this binding은 코드상에서 정적으로 결정됨. this는 항상 자신의 instance 자체를 가리킴!  
   그래서 정적으로 instance가 만들어지는 시점에 이를 가리키도록 this가 결정되면, this는 정적으로 계~속 이걸 가리킴. 변경 불가.
-- JS, TS에서의 this binding은 런타임 상에서 누가 호출하느냐에 따라서 동적으로 this가 뭘 가리키는지 결정됨. 즉, this caller에 의해 동적으로 결정됨. -> 이 때문에 예상하지 못하고 구현시 예상치 못한 버그가 발생하는 경우도 있다.
+- **JS, TS에서의 this binding은 런타임 상에서 누가 호출하느냐에 따라서 동적으로 this가 뭘 가리키는지 결정됨.** 즉, this caller에 의해 동적으로 결정됨. -> 이 때문에 예상하지 못하고 구현시 예상치 못한 버그가 발생하는 경우도 있다.
 
-## global context에서의 this
+### global context에서의 this
 
 - 브라우저 환경에서
 
@@ -27,11 +30,11 @@ console.log(globalThis); // node에서 전역으로 사용할 수 있는 전역 
 globalThis.setTimeout() //globalThis는 생략이 가능하기 때문에 그냥 setTimeOut()으로 사용하곤 함.
 ```
 
-## 생성자 함수나 class 내부에서의 this
+### 생성자 함수나 class 내부에서의 this
 
 - 앞으로 만들어질 instance 객체 자체를 가리킴.
 
-## 함수 내부에서의 this
+### 일반 함수 내부에서의 this
 
 - 브라우저 환경에서
 
@@ -54,7 +57,9 @@ func();
 
 단 strict mode에서는 함수 내부 scope에 this라는 정보가 없기 때문에 undefined.
 
-## 동적 binding
+일반 함수로 호출된 모든 함수(중첩 함수, 콜백 함수 포함) 내부의 this에는 전역 객체가 바인딩된다.   *이에 대한 내용은 < Javascript Deep Dive > 349p 참고*
+
+### 동적 binding
 
 ```JS
 // 생성자 함수
