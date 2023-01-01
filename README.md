@@ -143,3 +143,11 @@ Advanced: JS의 내부 구현사항
   - 방법2. 화살표 함수 사용
 - 화살표 함수
   - 화살표 함수의 특징
+
+
+# [Async]()
+> Related < Javascript Deep Dive > Chapter
+> - 42장. 비동기 프로그래밍
+> - 45장. 프로미스
+> - 46장. 제너레이터와 async/await
+> - 47장. 에러 처리
