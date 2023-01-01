@@ -88,6 +88,14 @@ Advanced: JS의 내부 구현사항
   - 프로퍼티 축약 표현
   - 메서드 축약 표현
 
+# [Array]()
+> Related <Javascript Deep Dive> Chapter
+> Compare with Python! see 
+> - 27장. 배열
+- [JS에서 배열이란]()
+- [배열 생성 방법]()
+- [Array methods]()
+
 
 # [Scope]()
 > Related < Javascript Deep Dive > Chapter
