@@ -1,27 +1,245 @@
 # Prototype
 
+
+## Prototype 이란
 JS에서 prototype은
 다양한 객체들간 비슷한 특징을 class로 만든것(생성자 함수로 template로 만들 것)처럼 객체지향 프로그램을 위해 prototype을 사용함.  
 Javascript has dynamic tytping, prototype-based object-orientation, and first-class functions.
 
-최신 JS, TS모두 class를 사용하는데, 왜 prototype를 배워야 할까?  
+최신 JS, TS모두 ES6에서 도입된 class를 사용하는데, 왜 prototype를 배워야 할까?  
 왜냐하면 JS가 prototype을 base로 만들어진 언어이고,
-class도 사실 prototype을 감싸고 있는 문법적 wrapper이기 때문이다.
+class도 사실 함수이며, prototype을 감싸고 있는 문법적 wrapper, 문법적 설탕이기 때문이다.
+
+```JS
+const dog1 = {name: '뭉치', emoji: '🐶'};
+const dog2 = {name: '코코', emoji: '🦮'};
+
+// 이렇게 유사한 객체들 생성에는 생성자 함수 또는 최근에는 class(하지만 prototype을 감싸는 문법적 설탕일 뿐, 내부적 동작은 prototype임) 을 사용한다.
+// 생성자 함수
+function Dog(name, emoji) {
+  this.name = name;
+  this.emoji = emoji;
+
+  // 인스턴스 레벨의 함수
+  this.printName = () => {
+    console.log(`${this.name} ${this.emoji}`)
+  }
+}
+const dog1 = new Dog('뭉치', '🐶');
+const dog2 = new Dog('코코', '🦮');
+
+// 프로토타입 레벨의 함수
+Dog.prototype.printName = function () {
+  console.log(`${this.name} ${this.emoji}`)
+} // 이런식으로 해주면 됨.
+const dog1 = new Dog('뭉치', '🐶');
+```
+
+## 오버라이딩과 섀도잉
+```JS
+
+// 오버라이딩
+// 인스턴스 레벨(자식)에서 동일한 이름으로 함수를 재정의하면 (오버라이딩 하면)
+// 프로토타입 레벨(부모) 함수의 프로퍼티는 가려진다. (섀도잉 됨)
+dog1.printName = function () {
+  console.log('안녕!);
+}
+dog1.printName();
+
+// 정적 레벨의 함수
+Dog.hello = () => {
+  console.log('Hello!');
+};
+Dog.hello();
+// 정적 레벨의 데이터
+Dog.MAX_AGE = 20;
+```
+
+## Prototype을 이용한 상속(inheritance)
+
+생성자 함수를 사용하면 동일한 property(method 포함)가 매번 중복 생성되고, 모든 인스턴스가 중복 소유하게 된다. 불필요하다. 
+
+그래서 상속을 통해 불필요한 중복을 줄일수 있는 방법이 바로 prototype을 기반으로 상속을 구현하는 방법이다. 
+
+Object.create는 인자로 넘겨준 prototype을 base로 해서, 새로운 object를 만들어준다.
+
+```JS
+// 프로토타입을 베이스로한 객체지향 프로그래밍
+function Animal(name, emoji) {
+  this.name = name;
+  this.emoji = emoji;
+}
+
+Animal.prototype.printName = function () {
+  console.log(`${this.name} ${this.emoji}`);
+};
+
+function Dog(name, emoji, owner) {
+  super(name, emoji) // 상속시, 부모 생성자에 연결해주는데 필요. 이와 같은 것이 .call
+  Animal.call(this, name, emoji); // 위의 super와 같은 것으로, 'Animal의 생성자함수를 call하는데, this는 내 this를 사용해줘 그리고 name, emoji 값은 여기 있어' 라는 의미.
+  this.owner = owner;
+}
+// Dog.prototype = Object.create(Object.prototype);
+Dog.prototype = Object.create(Animal.prototype); //Object.create는 인자로 넘겨준 prototype을 base로 해서, 새로운 object를 만들어준다.
+
+Dog.prototype.play = () => {
+  console.log('같이 놀자옹!');
+};
+
+function Tiger(name, emoji) {
+  Animal.call(this, name, emoji);
+}
+
+Tiger.prototype = Object.create(Animal.prototype);
+Tiger.prototype.hunt = () => {
+  console.log('사냥하자! ..🐇..');
+};
+
+const dog1 = new Dog('멍멍', '🐶', '엘리');
+dog1.play();
+dog1.printName();
+const tiger1 = new Tiger('어흥', '🐯');
+tiger1.printName();
+tiger1.hunt();
+
+console.log(dog1 instanceof Dog);
+console.log(dog1 instanceof Animal);
+console.log(dog1 instanceof Tiger);
+console.log(tiger1 instanceof Dog);
+console.log(tiger1 instanceof Animal);
+console.log(tiger1 instanceof Tiger);
+```
+
+### 상속도 확인하는 법
+
+내가 만든 객체가 누구를 상속하는지, 어떤 class 또는 생성자 함수의 instance인지 확인할 수 있는 instanceof 에 대해 알아보자!
+
+`객체 instanceof 생성자함수` 이렇게 하면 생성자 함수의 prototype에 바인딩된 객체가 좌변의 객체의 prototype chain에 존재하면 true, 아니면 false가 된다. 
+
+```JS
+// ... 위의 코드에 이어서
+const dog1 = new Dog('멍멍', '🐶', '엘리');
+const tiger1 = new Tiger('어흥', '🐯');
+
+console.log(dog1 instanceof Dog); // True
+console.log(dog1 instanceof Animal); // True
+console.log(dog1 instanceof Tiger); // False
+```
+
+instanceof 연산자를 함수로 표현하면
+```JS
+function isInstanceOf(instance, constructor) {
+  // 프로토타입 취득
+  const prototype = Object.getPrototypeOf(instance);
+
+  // 재귀 탈출 조건
+  // prototype이 null이면 프로토타입 체인의 종점에 다다른 것이다. 
+  if (prototype === null) return false;
+
+  // 프로로타입이 생성자 함수의 prototype 프로퍼티에 바인딩된 객체라면 true
+  // 그렇지 않다면 재귀 호출로 프로토타입 체인 상의 상위 프로토타입으로 이동하여 확인한다. 
+  return prototype === constructor.prototype || isInstanceOf(prototype, constructor);
+}
+```
+따라서 생성자 함수에 의해 프로토타입이 교체되어 constructor 프로퍼티와 생성자 함수 간의 연결이 파괴되어도 생성자 함수의 prototype 프로퍼티와 프로토타입 간의 연결은 파괴되지 않으므로 instanceof 는 아무런 영향을 받지 않는다. 
+
+```JS
+const Person = (function () {
+  function Person(name) {
+    this.name = name;
+  }
+
+  // 생성자 함수의 prototype 프로퍼티를 통해 프로토타입을 교체
+  Person.prototype = {
+    sayHello() {
+      console.log('hello')
+    }
+  };
+
+  return Person;
+}());
+
+
+const me = new Person('Lee');
+
+// constructor 프로퍼티와 생성자 함수 간의 연결이 파괴되어도 instanceof는 아무런 영향을 받지 않는다. 
+console.log(me.constructor === Person); //false
+
+// Person.prototype이 me 객체의 프로토타입 체인 상에 존재하므로 true로 평가된다. 
+console.log(me instanceof Person); // true
+
+// Object.prototype이 me 객체의 프로토타입 체인 상에 존재하므로 true로 평가된다. 
+console.log(me instanceof Object); // true
+```
+
+### Mixin
+
+여러가지 기능을 섞을 때 사용.  
+기본적으로 JS에서 object는 다중상속이 안됨. 즉 하나의 부모만 상속 가능. object는 단 하나의 prototype을 가리킬 수 있다.  
+하지만 여러개의 함수들을 상속하고 싶다면 mixin!
+Object.assign 이라는 static함수를 통해
+
+```JS
+// 오브젝트는 단 하나의 prototype을 가리킬 수 있다 (부모는 단 하나!)
+// 하지만! 여러개의 함수들을 상속하고 싶다!
+// Mixin!
+const play = {
+  play: function () {
+    console.log(`${this.name} 놀아요!`);
+  },
+};
+
+const sleep = {
+  sleep: function () {
+    console.log(`${this.name} 자요!`);
+  },
+};
+
+function Dog(name) {
+  this.name = name;
+}
+
+Object.assign(Dog.prototype, play, sleep); // Dog의 prototype에 play 객체와 sleep 객체를 할당할거야. 즉, 이 두 객체의 함수를 섞어줘(mixin)
+const dog = new Dog('멍멍');
+console.log(dog);
+dog.play();
+dog.sleep();
+
+class Animal {}
+class Tiger extends Animal {
+  constructor(name) {
+    super();
+    this.name = name;
+  }
+}
+
+Object.assign(Tiger.prototype, play, sleep);
+const tiger = new Tiger('어흥!');
+tiger.play();
+tiger.sleep();
+```
+
+
 
 ## Prototype 눈으로 확인하기
+
+*TODO: JS Deep Dive 19.3 다시 읽고 이해하기*
 
 모든 객체는 내부에 숨겨진 [[Prototype]]을 가지고 있다.
 이 prototype은 외부에서 직접 접근이 불가하고, 접근하려면
 
-- **proto**
+- __ proto __
 - Object.getPrototypeOf()
 - Object.setPrototypeOf()
 - 생성자 함수에서는: prototype으로 접근 가능
 
 ## Prototype chain
 
-객체간 상속의 연결 고리는 prototype chain으로 연결되어 있음.
-그리고 chain의 맨 위는 결국 Object 라는 prototype을 상속하고 있다.
+객체간 상속의 연결 고리는 prototype chain으로 연결되어 있음. JS는 객체의 property에 접근하려고 할ㄷ 때 해당 객체에 없으면, Prototype chain을 통해 자신의 부모 역할을 하는 prototype의 property를 순차적으로 검색한다. 
+그리고 chain의 맨 위는 결국 Object 라는 prototype을 상속하고 있다. Object.prototype을 prototype chain의 종점이라고 한다. 
+
+*scope chain에 대해서는 [여기]()에서 정리해둔 바가 있는데, 이는 property가 아닌 식별자 검색을 위한 매커니즘이다.*
+
 그림 14)
 
 ## Prototype descriptor
@@ -155,158 +373,3 @@ tiger.age = 1;
 console.log(tiger);
 ```
 
-## Prototype
-
-```JS
-const dog1 = {name: '뭉치', emoji: '🐶'};
-const dog2 = {name: '코코', emoji: '🦮'};
-
-// 이렇게 유사한 객체들 생성에는 생성자 함수 또는 최근에는 class(하지만 prototype을 감싸는 문법적 설탕일 뿐, 내부적 동작은 prototype임) 을 사용한다.
-// 생성자 함수
-function Dog(name, emoji) {
-  this.name = name;
-  this.emoji = emoji;
-
-  // 인스턴스 레벨의 함수
-  this.printName = () => {
-    console.log(`${this.name} ${this.emoji}`)
-  }
-}
-const dog1 = new Dog('뭉치', '🐶');
-const dog2 = new Dog('코코', '🦮');
-
-// 프로토타입 레벨의 함수
-Dog.prototype.printName = function () {
-  console.log(`${this.name} ${this.emoji}`)
-} // 이런식으로 해주면 됨.
-const dog1 = new Dog('뭉치', '🐶');
-
-
-// 오버라이딩
-// 인스턴스 레벨(자식)에서 동일한 이름으로 함수를 재정의하면 (오버라이딩 하면)
-// 프로토타입 레벨(부모) 함수의 프로퍼티는 가려진다. (섀도잉 됨)
-dog1.printName = function () {
-  console.log('안녕!);
-}
-dog1.printName();
-
-// 정적 레벨의 함수
-Dog.hello = () => {
-  console.log('Hello!');
-};
-Dog.hello();
-// 정적 레벨의 데이터
-Dog.MAX_AGE = 20;
-```
-
-## Prototype을 이용한 상속(inheritance)
-
-Object.create는 인자로 넘겨준 prototype을 base로 해서, 새로운 object를 만들어준다.
-
-```JS
-// 프로토타입을 베이스로한 객체지향 프로그래밍
-function Animal(name, emoji) {
-  this.name = name;
-  this.emoji = emoji;
-}
-
-Animal.prototype.printName = function () {
-  console.log(`${this.name} ${this.emoji}`);
-};
-
-function Dog(name, emoji, owner) {
-  super(name, emoji) // 상속시, 부모 생성자에 연결해주는데 필요. 이와 같은 것이 .call
-  Animal.call(this, name, emoji); // 위의 super와 같은 것으로, 'Animal의 생성자함수를 call하는데, this는 내 this를 사용해줘 그리고 name, emoji 값은 여기 있어' 라는 의미.
-  this.owner = owner;
-}
-// Dog.prototype = Object.create(Object.prototype);
-Dog.prototype = Object.create(Animal.prototype); //Object.create는 인자로 넘겨준 prototype을 base로 해서, 새로운 object를 만들어준다.
-
-Dog.prototype.play = () => {
-  console.log('같이 놀자옹!');
-};
-
-function Tiger(name, emoji) {
-  Animal.call(this, name, emoji);
-}
-
-Tiger.prototype = Object.create(Animal.prototype);
-Tiger.prototype.hunt = () => {
-  console.log('사냥하자! ..🐇..');
-};
-
-const dog1 = new Dog('멍멍', '🐶', '엘리');
-dog1.play();
-dog1.printName();
-const tiger1 = new Tiger('어흥', '🐯');
-tiger1.printName();
-tiger1.hunt();
-
-console.log(dog1 instanceof Dog);
-console.log(dog1 instanceof Animal);
-console.log(dog1 instanceof Tiger);
-console.log(tiger1 instanceof Dog);
-console.log(tiger1 instanceof Animal);
-console.log(tiger1 instanceof Tiger);
-```
-
-## 상속도 확인하는 법
-
-내가 만든 객체가 누구를 상속하는지, 어떤 class 또는 생성자 함수의 instance인지 확인할 수 있는 instanceof 에 대해 알아보자!
-
-```JS
-// ... 위의 코드에 이어서
-const dog1 = new Dog('멍멍', '🐶', '엘리');
-const tiger1 = new Tiger('어흥', '🐯');
-
-console.log(dog1 instanceof Dog); // True
-console.log(dog1 instanceof Animal); // True
-console.log(dog1 instanceof Tiger); // False
-```
-
-## Mixin
-
-여러가지 기능을 섞을 때 사용.  
-기본적으로 JS에서 object는 다중상속이 안됨. 즉 하나의 부모만 상속 가능. object는 단 하나의 prototype을 가리킬 수 있다.  
-하지만 여러개의 함수들을 상속하고 싶다면 mixin!
-Object.assign 이라는 static함수를 통해
-
-```JS
-// 오브젝트는 단 하나의 prototype을 가리킬 수 있다 (부모는 단 하나!)
-// 하지만! 여러개의 함수들을 상속하고 싶다!
-// Mixin!
-const play = {
-  play: function () {
-    console.log(`${this.name} 놀아요!`);
-  },
-};
-
-const sleep = {
-  sleep: function () {
-    console.log(`${this.name} 자요!`);
-  },
-};
-
-function Dog(name) {
-  this.name = name;
-}
-
-Object.assign(Dog.prototype, play, sleep); // Dog의 prototype에 play 객체와 sleep 객체를 할당할거야. 즉, 이 두 객체의 함수를 섞어줘(mixin)
-const dog = new Dog('멍멍');
-console.log(dog);
-dog.play();
-dog.sleep();
-
-class Animal {}
-class Tiger extends Animal {
-  constructor(name) {
-    super();
-    this.name = name;
-  }
-}
-
-Object.assign(Tiger.prototype, play, sleep);
-const tiger = new Tiger('어흥!');
-tiger.play();
-tiger.sleep();
-```
